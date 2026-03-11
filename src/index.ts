@@ -109,7 +109,11 @@ async function main(): Promise<void> {
   }
 
   if (!activeBotToken) {
-    logger.error('Bot token is not set. Add TELEGRAM_BOT_TOKEN (or agent token) to .env and restart.');
+    if (AGENT_ID === 'main') {
+      logger.error('Bot token is not set. Run npm run setup to configure it.');
+    } else {
+      logger.error({ agentId: AGENT_ID }, `Configuration for agent "${AGENT_ID}" is broken: bot token not set. Check .env or re-run npm run agent:create.`);
+    }
     process.exit(1);
   }
 
@@ -160,7 +164,10 @@ async function main(): Promise<void> {
       logger.info({ username: botInfo.username }, 'ClaudeClaw is running');
       if (AGENT_ID === 'main') {
         console.log(`\n  ClaudeClaw online: @${botInfo.username}`);
-        console.log(`  Send /chatid to get your chat ID for ALLOWED_CHAT_ID\n`);
+        if (!ALLOWED_CHAT_ID) {
+          console.log(`  Send /chatid to get your chat ID for ALLOWED_CHAT_ID`);
+        }
+        console.log();
       } else {
         console.log(`\n  ClaudeClaw agent [${AGENT_ID}] online: @${botInfo.username}\n`);
       }
