@@ -1,0 +1,507 @@
+================================================================================
+DIY WORKFLOW: BUILD YOUR OWN CHAT REPLACEMENT IN VS CODE
+For a WordPress-based DearDoc replacement MVP
+================================================================================
+
+WHAT THIS DOCUMENT IS
+- A practical build order for making the first version yourself.
+- Written for a non-programmer who is willing to learn and use AI help.
+- Focused on an MVP that captures intake data and sends it to Bitrix24.
+
+IMPORTANT SAFETY NOTE
+- Do NOT put real patient PHI into a live system until hosting, storage, email, CRM,
+  and access controls have been reviewed for HIPAA readiness.
+- Use fake/test patient data during development.
+- Treat this workflow as "build the product safely in stages," not "ship quickly at any cost."
+
+RECOMMENDED GOAL
+Build version 1 as a scripted intake widget, not a freeform AI chatbot.
+That is faster, cheaper, and easier to secure.
+
+================================================================================
+PROJECT OUTCOME
+================================================================================
+
+By the end, you should have:
+1. A WordPress plugin or embedable widget
+2. A scripted intake flow with required questions
+3. Secure server-side submission handling
+4. Bitrix24 lead creation
+5. A basic admin view or secure internal review page
+6. PHI-minimized staff alerts
+7. Documentation for deployment and future hiring
+
+================================================================================
+DECIDE YOUR BUILD TRACK BEFORE YOU START
+================================================================================
+
+TRACK A: PROTOTYPE ONLY
+- Goal: prove the flow works
+- Use test data only
+- Skip production launch
+- Best if you want to learn and validate the concept yourself
+
+TRACK B: PRODUCTION CANDIDATE
+- Goal: get close to a real replacement
+- Requires real security hardening, access control, retention policy,
+  logging review, vendor review, and launch checklist
+- Still smart to have a developer or security-aware reviewer check it
+
+If you are unsure, start with TRACK A.
+
+================================================================================
+PHASE 0: DEFINE THE EXACT MVP
+================================================================================
+
+Before writing code, lock the scope.
+
+MVP QUESTIONS TO FREEZE
+- What exact questions will the widget ask?
+- Which answers are required?
+- Which locations should appear?
+- Are you creating a Bitrix24 Lead, Contact, or both?
+- What should staff receive: dashboard only, or dashboard + PHI-free alert?
+- What is the retention rule for stored submissions?
+
+USE THIS INITIAL QUESTION SET
+1. Privacy notice and consent to continue
+2. Which location are you contacting?
+3. Are you a new or existing patient?
+4. What is your full name?
+5. What is your phone number?
+6. Do you consent to SMS communication?
+7. What is your email?
+8. What is the reason for your visit?
+9. What insurance provider do you have?
+10. What is your preferred appointment date or time?
+11. Confirmation screen
+
+DELIVERABLE FOR THIS PHASE
+Create a file called docs/mvp-scope.txt with:
+- exact questions
+- branching rules
+- required fields
+- Bitrix24 field mapping
+- out-of-scope items
+
+Do not keep changing scope during the build.
+
+================================================================================
+PHASE 1: SET UP YOUR LOCAL DEV ENVIRONMENT
+================================================================================
+
+RECOMMENDED TOOLS
+- VS Code
+- Git
+- Local WordPress environment, either:
+  - LocalWP, easiest for WordPress beginners, or
+  - XAMPP / MAMP if you prefer manual setup
+- A browser with DevTools, Chrome or Edge is fine
+
+VS CODE EXTENSIONS
+- PHP Intelephense
+- Prettier
+- ESLint
+- EditorConfig
+- Error Lens
+
+SET UP GIT
+In terminal:
+
+mkdir prism-chat-widget
+cd prism-chat-widget
+git init
+mkdir docs plugin tests
+
+Create a private GitHub repo when ready.
+Commit often.
+
+MINIMUM FOLDER STRUCTURE
+prism-chat-widget/
+  docs/
+    mvp-scope.txt
+    field-mapping.txt
+    deployment-checklist.txt
+  plugin/
+    prism-chat-widget.php
+    includes/
+      class-settings.php
+      class-rest.php
+      class-bitrix24.php
+      class-storage.php
+      class-admin.php
+    assets/
+      css/chat-widget.css
+      js/chat-widget.js
+      templates/widget-shell.php
+  tests/
+    sample-payload.json
+
+CHECKPOINT
+- WordPress runs locally
+- You can install and activate a custom plugin
+- Git repo exists
+
+================================================================================
+PHASE 2: BUILD THE WORDPRESS PLUGIN SHELL
+================================================================================
+
+GOAL
+Get a plugin activated in WordPress with no business logic yet.
+
+TASKS
+1. Create plugin/prism-chat-widget.php
+2. Add the WordPress plugin header
+3. Define constants for plugin path and URL
+4. Load CSS and JS assets using wp_enqueue_style and wp_enqueue_script
+5. Render a widget shell in the site footer or via shortcode
+6. Add a simple admin menu page called Chat Widget
+
+SUCCESS CRITERIA
+- Plugin activates without PHP warnings
+- A chat launcher appears on the site
+- Admin menu page appears in WordPress
+
+COMMIT
+git add .
+git commit -m "Create plugin shell and asset loading"
+
+================================================================================
+PHASE 3: BUILD THE FRONTEND CHAT EXPERIENCE
+================================================================================
+
+GOAL
+Make the patient-facing flow work end to end in the browser.
+
+START SIMPLE
+Do not build AI here.
+Build a finite scripted flow.
+
+FRONTEND FEATURES
+- floating launcher button
+- open and close widget
+- chat body area
+- one current question at a time
+- text input or choice buttons depending on the step
+- previous answers stored in browser memory until submit
+- basic client-side validation
+
+YOUR DATA MODEL
+Store answers in one JavaScript object, for example:
+- location
+- patient_status
+- full_name
+- phone
+- sms_consent
+- email
+- visit_reason
+- insurance
+- preferred_datetime
+
+FRONTEND RULES
+- required fields block next step
+- phone and email should be validated
+- consent should be explicit, not assumed
+- no PHI in URL parameters
+- do not rely on localStorage for sensitive data unless absolutely needed
+
+CHECKPOINT
+- You can finish the whole flow with test data
+- Validation errors are clear
+- Mobile layout is usable
+
+COMMIT
+git add .
+git commit -m "Build scripted frontend intake flow"
+
+================================================================================
+PHASE 4: ADD SETTINGS AND FIELD MAPPING
+================================================================================
+
+GOAL
+Make the widget configurable without editing code every time.
+
+SETTINGS PAGE FIELDS
+- practice name
+- location list
+- Bitrix24 webhook URL or API settings
+- notification email destination
+- whether PHI-free alert emails are enabled
+- text for privacy notice
+
+CREATE docs/field-mapping.txt
+Include a table or simple list with:
+- local field name
+- Bitrix24 field name
+- required or optional
+- notes about formatting
+
+EXAMPLE MAPPING
+- full_name -> TITLE or contact name field
+- phone -> PHONE
+- email -> EMAIL
+- location -> custom field
+- patient_status -> custom field
+- visit_reason -> custom field
+- insurance -> custom field
+- preferred_datetime -> custom field
+
+CHECKPOINT
+- Settings save in WordPress
+- You can change locations without editing JavaScript manually
+
+COMMIT
+git add .
+git commit -m "Add admin settings and field mapping"
+
+================================================================================
+PHASE 5: BUILD SERVER-SIDE SUBMISSION HANDLING
+================================================================================
+
+GOAL
+Move submission processing to the server side.
+
+DO NOT
+- send Bitrix24 credentials from frontend JavaScript
+- trust raw browser input
+- log request bodies with PHI in debug output
+
+BUILD THIS NEXT
+1. Register a secure WordPress REST route or AJAX handler
+2. Send the completed intake payload from the browser to WordPress
+3. Sanitize and validate on the server
+4. Return a success or failure response
+5. Show a friendly confirmation message in the widget
+
+IF YOU STORE SUBMISSIONS LOCALLY
+Only store what you really need.
+Recommended fields:
+- submission_id
+- created_at
+- status
+- encrypted_payload or minimized structured fields
+- sync_status
+- last_error without PHI
+
+BETTER DEFAULT
+Use short-term storage only if needed for retries or admin review.
+Do not keep data forever just because it is easy.
+
+CHECKPOINT
+- Submission reaches WordPress securely
+- Bad input is rejected cleanly
+- No PHI appears in console logs or URLs
+
+COMMIT
+git add .
+git commit -m "Add server-side intake submission endpoint"
+
+================================================================================
+PHASE 6: CONNECT BITRIX24
+================================================================================
+
+GOAL
+Create a lead or contact automatically when a patient finishes the flow.
+
+BUILD ORDER
+1. Get the Bitrix24 API or webhook details working in a test environment
+2. Create one isolated PHP class for Bitrix24 requests
+3. Map your local fields into Bitrix24 format
+4. Handle API failures without losing the submission
+5. Save a sync result status for admin visibility
+
+REQUIRED BEHAVIOR
+- Success: mark as synced and show confirmation
+- Failure: save minimal retry metadata and show safe fallback message
+- Never expose raw credentials to the browser
+
+TEST CASES
+- valid new patient submission
+- existing patient submission
+- missing optional insurance
+- Bitrix24 timeout or 500 error
+- invalid credentials
+
+CHECKPOINT
+- Test submission creates a record in Bitrix24
+- You can tell whether sync succeeded or failed
+
+COMMIT
+git add .
+git commit -m "Connect Bitrix24 lead creation"
+
+================================================================================
+PHASE 7: ADD INTERNAL REVIEW AND ALERTING
+================================================================================
+
+GOAL
+Let staff know a new intake arrived without spraying PHI everywhere.
+
+SAFER DEFAULT
+- Staff get a simple alert such as:
+  "New intake received. Review it in the dashboard."
+- Include a secure admin link if appropriate
+- Do NOT include full patient details in normal email
+
+ADMIN VIEW SHOULD SHOW
+- submission time
+- sync status
+- location
+- patient name only if access control is appropriate
+- full intake only for authenticated authorized staff
+
+ACCESS CONTROL RULES
+- WordPress roles must be limited
+- session timeout should exist if possible
+- audit logging is ideal for production
+
+CHECKPOINT
+- Authorized staff can review a submission
+- Unauthorized users cannot access submission details
+- Notification content is PHI-minimized
+
+COMMIT
+git add .
+git commit -m "Add admin review page and safe notifications"
+
+================================================================================
+PHASE 8: HARDEN SECURITY BEFORE ANY REAL-WORLD USE
+================================================================================
+
+THIS PHASE IS NOT OPTIONAL FOR PRODUCTION
+
+REVIEW THIS CHECKLIST
+- HTTPS enforced
+- secrets stored outside frontend code
+- nonces used where appropriate
+- inputs sanitized and escaped
+- SQL queries prepared
+- output escaped in admin pages
+- no PHI in error logs
+- no PHI in analytics tools
+- no PHI in normal email notifications
+- least-privilege WordPress roles
+- backup and retention plan documented
+- vendor review completed for hosting, CRM, email, and any logging tools
+- BAAs confirmed where needed
+
+VERY IMPORTANT
+If Bitrix24, hosting, or email path cannot support HIPAA expectations,
+do not launch with real patient data.
+
+CREATE docs/deployment-checklist.txt
+Write down:
+- environment URL
+- plugin version
+- who has admin access
+- backup location
+- retention policy
+- incident contact
+- vendor/BAA status
+
+COMMIT
+git add .
+git commit -m "Add hardening checklist and launch documentation"
+
+================================================================================
+PHASE 9: TESTING
+================================================================================
+
+RUN THESE TESTS
+
+FUNCTIONAL TESTS
+- every question appears in order
+- required fields block progress
+- confirmation page appears
+- Bitrix24 record is created correctly
+- admin can review submission
+
+ERROR TESTS
+- internet drops during submit
+- Bitrix24 is unavailable
+- invalid phone or email entered
+- settings page missing API credentials
+
+SECURITY TESTS
+- inspect browser network calls for accidental leaks
+- inspect server logs for PHI leakage
+- verify no PHI in alert emails
+- test with a low-permission WordPress user
+
+DEVICE TESTS
+- iPhone Safari
+- Android Chrome
+- desktop browser
+
+USE ONLY TEST DATA
+Fake patient names, fake phone numbers, fake symptoms.
+
+================================================================================
+PHASE 10: DEPLOYMENT
+================================================================================
+
+SAFEST DEPLOYMENT ORDER
+1. staging site
+2. internal review with test data
+3. security review and workflow review
+4. limited pilot
+5. production launch
+
+DO NOT DEPLOY STRAIGHT TO LIVE IF
+- you have not tested Bitrix24 failure handling
+- you do not know where submissions are stored
+- you have not checked logs
+- you are still emailing PHI in plaintext
+- access control is vague or shared
+
+POST-LAUNCH TASKS
+- monitor failed submissions
+- review admin access monthly
+- patch WordPress and plugins
+- revisit conversation wording based on drop-off points
+
+================================================================================
+HOW TO USE AI HELP WITHOUT LOSING CONTROL
+================================================================================
+
+GOOD WAY TO ASK FOR HELP
+Give one small task at a time.
+Example:
+- "Create the WordPress plugin shell that enqueues one CSS file and one JS file."
+- "Write a PHP class that posts sanitized intake data to Bitrix24."
+- "Review this JavaScript for validation bugs."
+
+BAD WAY TO ASK FOR HELP
+- "Build the whole app."
+- "Make this HIPAA compliant" with no context
+
+KEEP A docs/decisions.txt FILE
+After every major choice, write down:
+- what you changed
+- why you changed it
+- what still needs review
+
+================================================================================
+DEFINITION OF DONE FOR VERSION 1
+================================================================================
+
+Version 1 is done when:
+- the widget is embedded on the WordPress site
+- the scripted intake flow works on mobile and desktop
+- submissions are handled server-side
+- Bitrix24 receives the mapped data
+- staff can review submissions securely
+- alerts are PHI-minimized
+- deployment steps are documented
+- you understand where data goes at every step
+
+================================================================================
+MY STRONG RECOMMENDATION
+================================================================================
+
+If your real goal is a production HIPAA-sensitive replacement, do this:
+- build or review the prototype yourself to understand the flow
+- then use the job post to hire a developer for the final hardening and launch
+
+That hybrid path is usually the sweet spot.
+You learn the system, keep control, and avoid guessing on the compliance-critical parts.
