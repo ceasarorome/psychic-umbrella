@@ -1,0 +1,132 @@
+VS CODE STARTER PROMPT
+DearDoc Replacement MVP, WordPress Plugin Scaffold
+
+Paste everything below into VS Code chat or your coding assistant.
+
+-------------------------------------------------------------------------------
+I am building a WordPress plugin MVP called "Prism Chat Widget" to replace DearDoc with a scripted patient intake flow.
+
+IMPORTANT CONTEXT
+- This is an MVP / prototype-first build.
+- Use TEST DATA ONLY during development.
+- Do not claim HIPAA compliance in code comments or docs.
+- Build with security-conscious defaults, but treat production hardening as a later step.
+- This is NOT a freeform AI chatbot.
+- This is a scripted intake widget.
+- No EHR integration.
+- No appointment booking.
+- Bitrix24 integration is required, but phase 1 can stub it behind a service class.
+
+PRODUCT GOAL
+Create a WordPress plugin that renders a chat-style intake widget on the site and collects:
+- location
+- new vs existing patient
+- full name
+- phone number
+- SMS consent
+- email
+- reason for visit
+- insurance provider
+- preferred appointment date/time
+
+TECHNICAL STACK
+- WordPress plugin
+- PHP 8+
+- vanilla JavaScript
+- CSS
+- WordPress Settings API for admin settings
+- WordPress REST API for form submission
+- modular class-based structure where reasonable
+- no React, no build step, no external JS frameworks
+
+PLUGIN NAME
+Prism Chat Widget
+
+PLUGIN SLUG
+prism-chat-widget
+
+FIRST MILESTONE
+Please scaffold phase 1 of the plugin with these requirements:
+
+1. Create a clean plugin folder structure:
+   - prism-chat-widget.php
+   - includes/class-prism-chat-widget.php
+   - includes/class-prism-chat-settings.php
+   - includes/class-prism-chat-rest.php
+   - includes/class-prism-chat-bitrix24.php
+   - assets/css/chat-widget.css
+   - assets/js/chat-widget.js
+   - templates/widget-shell.php
+   - README.md
+
+2. Build a working plugin shell that:
+   - activates without errors
+   - registers a shortcode [prism_chat_widget]
+   - enqueues CSS and JS only when the shortcode is used
+   - renders a floating chat launcher and chat window shell
+
+3. Build a scripted frontend flow in vanilla JS with these steps:
+   - privacy notice / consent to continue
+   - location
+   - new or existing patient
+   - full name
+   - phone number
+   - SMS consent
+   - email
+   - reason for visit
+   - insurance provider
+   - preferred appointment date/time
+   - confirmation screen
+
+4. Add basic client-side validation for:
+   - required fields
+   - email format
+   - phone format
+   - consent before continuing
+
+5. Add a WordPress admin settings page for:
+   - practice name
+   - location list
+   - Bitrix24 webhook URL placeholder
+   - notification email placeholder
+   - privacy notice text
+
+6. Add a REST endpoint stub for submission:
+   - route namespace: prism-chat/v1
+   - route: /intake
+   - accept POST requests
+   - sanitize inputs
+   - return JSON success response
+   - do not fully implement Bitrix24 yet, but wire in a service class placeholder
+
+7. Add a Bitrix24 service class stub that:
+   - is injectable or callable from the REST handler
+   - has a method like create_lead(array $payload)
+   - returns a mocked result for now
+
+8. Add a README that explains:
+   - what the plugin does
+   - how to install it locally in WordPress
+   - how to use the shortcode
+   - where to configure settings
+   - what is still TODO before production use
+
+CODING RULES
+- Keep the code readable and boring.
+- Prefer simple WordPress-native patterns over clever abstractions.
+- Escape output properly.
+- Sanitize all incoming REST data.
+- Do not put secrets in frontend JavaScript.
+- Do not include plaintext PHI in comments or sample data.
+- Use comments only where they add real clarity.
+
+OUTPUT FORMAT
+1. Show the final file tree first.
+2. Then show each file with full contents.
+3. Keep filenames exact.
+4. After the code, include a short "How to run locally" section.
+5. End with a short "Next phase suggestions" list.
+
+IF SOMETHING IS AMBIGUOUS
+Make a reasonable choice and note it briefly after the code instead of stopping.
+-------------------------------------------------------------------------------
