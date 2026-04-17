@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "semrush": {
+        "command": "npx",
+        "args": ["-y", "github:mrkooblu/semrush-mcp"],
+        "env": {
+          "SEMRUSH_API_KEY": "${SEMRUSH_API_KEY}",
+          "SEMRUSH_DEFAULT_DATABASE": "us"
+        }
+      }
+    }
+  }
+}
