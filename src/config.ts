@@ -16,6 +16,7 @@ const envConfig = readEnvFile([
   'DASHBOARD_PORT',
   'DASHBOARD_TOKEN',
   'DASHBOARD_URL',
+  'DASHBOARD_BIND',
   'CLAUDECLAW_CONFIG',
   'DB_ENCRYPTION_KEY',
   'GOOGLE_API_KEY',
@@ -168,6 +169,8 @@ export const DASHBOARD_TOKEN =
   process.env.DASHBOARD_TOKEN || envConfig.DASHBOARD_TOKEN || '';
 export const DASHBOARD_URL =
   process.env.DASHBOARD_URL || envConfig.DASHBOARD_URL || '';
+export const DASHBOARD_BIND =
+  process.env.DASHBOARD_BIND || envConfig.DASHBOARD_BIND || '';
 
 // Database encryption key (SQLCipher). Required for encrypted database access.
 export const DB_ENCRYPTION_KEY =
